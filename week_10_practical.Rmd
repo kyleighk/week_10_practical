@@ -1,0 +1,130 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Here you'll generate your own data to make sure you understand what PCA is doing
+
+Generate 4 variables W, X, Y, and Z
+
+X and Y should not be correlated
+
+They are independent
+```{r}
+library(factoextra)
+library(tidyverse)
+```
+```{r}
+my_table = data.frame(w, x, y, z)
+my_table
+```
+```{r}
+?data.frame
+```
+
+W and X should have a mild correlation ( < 0.5)
+Y and Z should have a mild correlation ( > 0.9)
+```{r}
+set.seed(42)
+x = rnorm(10, 2, 1)
+noise = rnorm(10, 0, 2)
+```
+```{r}
+
+```
+
+
+```{r}
+w = 2*x + noise
+cor(x,w)
+```
+
+
+```{r}
+y = rnorm(10, 6, 1)
+error = rnorm(10, 6, 0.1)
+
+z = y/2 + error
+cor(y, z)
+```
+
+Here, it's important to note that: The correction of two variables A and B is not determined by the linear regression 𝐵=0.4×𝑋 does not mean that the correlation cor(A,B) = 0.4 Correction is factor of the noise in the linear regressio. For example, for 𝐵=0.4×𝑋+𝜖 , the larger the noise component, the samller will be the correction between A and B
+
+
+Generate a variable outcome as a linear combination of W, X, Y, and Z
+i.e., choose values for the coefficients  𝛽0 ,  𝛽1 , etc.. and compute outcome
+𝑜𝑢𝑡𝑐𝑜𝑚𝑒=𝛽0+𝛽1×𝑊+𝛽2×𝑋+𝛽3×𝑌+𝛽4×𝑍
+
+```{r}
+model_1 = lm(x~ y + w:z, data = my_table)
+summary(model_1)
+```
+
+```{r}
+outcome = 1 + 3 * w + 4 * x + 5 * y + 6 * z
+outcome
+```
+```{r}
+model_4 = lm(outcome~., data = my_table)
+summary(model_4)
+```
+
+
+Model your outcome using W, X, Y, and Z.
+Do your results match your model params?
+
+```{r}
+model_2 = lm(w~z + y:z, data = my_table)
+summary(model_2)
+```
+```{r}
+ggplot(my_table, aes(y, z)) +
+  geom_point() +
+  geom_smooth(method=lm, se=FALSE)
+```
+```{r}
+dif_error = rnorm(10, 0, 1)
+output = 4*w + 3*x + 2*y + dif_error
+attempt = lm(output ~ x + y + w + z)
+summary(attempt)
+```
+
+Use PCA to reduce the dimensionality of your dataset
+Can you explain why you don't need to include the outcome?
+
+Use the bi-plot to visualize the contributions of your initial variables
+
+```{r}
+res_pca = prcomp(my_table, scale=TRUE)
+summary(res_pca)
+
+```
+
+```{r}
+str(res_pca)
+```
+
+```{r}
+res_pca$rotation
+```
+
+```{r}
+res_pca$sdev^2
+```
+
+```{r}
+res_pca$sdev^2/sum(res_pca$sdev^2)
+```
+
+
+```{r}
+res_pca$rotation[4,2]
+```
+
+
+```{r}
+fviz_pca_biplot(res_pca)
+```
+How efficient is the new lower-dimensional space representation at predicting the outcome?
+Do your results match your model params?
+
+This new representation is much better at predicting the outcome. Y & Z have a strong correlation greater than 0.95 and are closer together. Meanwhile x and w are barely correlated with a correlation <0.2. This is mirrored in the model above. I think more is gained from seeing this model than the linear regression model. 
